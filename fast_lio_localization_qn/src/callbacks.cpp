@@ -114,7 +114,7 @@ void FAST_LIO_LOCALIZATION_QN_CLASS::odom_pcd_cb(const nav_msgs::OdometryConstPt
   return;
 }
 
-void FAST_LIO_LOCALIZATION_QN_CLASS::loop_timer_func(const ros::TimerEvent& event)
+void FAST_LIO_LOCALIZATION_QN_CLASS::matching_timer_func(const ros::TimerEvent& event)
 {
   if (!m_init) return;
 

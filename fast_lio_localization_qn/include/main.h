@@ -43,16 +43,7 @@
 #include <quatro/quatro_module.h>
 ///// Eigen
 #include <Eigen/Eigen> // whole Eigen library: Sparse(Linearalgebra) + Dense(Core+Geometry+LU+Cholesky+SVD+QR+Eigenvalues)
-///// GTSAM
-#include <gtsam/geometry/Rot3.h>
-#include <gtsam/geometry/Point3.h>
-#include <gtsam/geometry/Pose3.h>
-#include <gtsam/slam/PriorFactor.h>
-#include <gtsam/slam/BetweenFactor.h>
-#include <gtsam/nonlinear/NonlinearFactorGraph.h>
-#include <gtsam/nonlinear/LevenbergMarquardtOptimizer.h>
-#include <gtsam/nonlinear/Values.h>
-#include <gtsam/nonlinear/ISAM2.h>
+
 
 using namespace std;
 using namespace std::chrono;
@@ -90,10 +81,6 @@ class FAST_LIO_LOCALIZATION_QN_CLASS
     Eigen::Matrix4d m_last_corrected_pose = Eigen::Matrix4d::Identity();
     Eigen::Matrix4d m_odom_delta = Eigen::Matrix4d::Identity();
     ///// graph and values
-    shared_ptr<gtsam::ISAM2> m_isam_handler = nullptr;
-    gtsam::NonlinearFactorGraph m_gtsam_graph;
-    gtsam::Values m_init_esti;
-    gtsam::Values m_corrected_esti;
     double m_keyframe_thr;
     ///// loop
     pcl::VoxelGrid<PointType> m_voxelgrid, m_voxelgrid_vis;
@@ -140,7 +127,7 @@ class FAST_LIO_LOCALIZATION_QN_CLASS
     visualization_msgs::Marker get_loop_markers(const gtsam::Values &corrected_esti_in);
     //cb
     void odom_pcd_cb(const nav_msgs::OdometryConstPtr &odom_msg, const sensor_msgs::PointCloud2ConstPtr &pcd_msg);
-    void loop_timer_func(const ros::TimerEvent& event);
+    void matching_timer_func(const ros::TimerEvent& event);
     void vis_timer_func(const ros::TimerEvent& event);
 };
 

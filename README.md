@@ -1,3 +1,8 @@
+# Note: this repository is not completed yet
+
+<br>
+
+
 # FAST-LIO-Localization-QN
 + This repository is a map-based localization implementation combining [FAST-LIO2](https://github.com/hku-mars/FAST_LIO) as an odometry with [Quatro](https://github.com/engcang/Quatro) and [Nano-GICP module](https://github.com/engcang/nano_gicp) as a map matching method
     + [Quatro](https://github.com/engcang/Quatro) - fast, accurate and robust global registration which provides great initial guess of transform
@@ -60,7 +65,7 @@
     + pub realtime pose in corrected frame
     + keyframe detection -> if keyframe, add to pose graph + save to keyframe queue
     + pose graph optimization with iSAM2
-+ loop_timer_func
++ matching_timer_func
     + process a saved keyframe
         + detect loop -> if loop, add to pose graph
 + vis_timer_func
