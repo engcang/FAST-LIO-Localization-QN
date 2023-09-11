@@ -152,3 +152,38 @@ Eigen::Matrix4d FAST_LIO_LOCALIZATION_QN_CLASS::coarse_to_fine_key_to_subkeys(co
 
   return output_tf_;
 }
+
+void FAST_LIO_LOCALIZATION_QN_CLASS::load_map(const string& saved_map_path)
+{
+  rosbag::Bag bag_;
+  bag_.open(saved_map_path, rosbag::bagmode::Read);
+  rosbag::View view1_(bag_, rosbag::TopicQuery("/keyframe_pcd"));
+  rosbag::View view2_(bag_, rosbag::TopicQuery("/keyframe_pose"));
+  vector<sensor_msgs::PointCloud2> load_pcd_vec_;
+  vector<geometry_msgs::PoseStamped> load_pose_vec_;
+  for (const rosbag::MessageInstance& pcd_msg_ : view1_)
+  {
+    sensor_msgs::PointCloud2::ConstPtr pcd_msg_ptr_ = pcd_msg_.instantiate<sensor_msgs::PointCloud2>();
+    if (pcd_msg_ptr_ != nullptr)
+    {
+      load_pcd_vec_.push_back(*pcd_msg_ptr_);
+    }
+  }
+  for (const rosbag::MessageInstance& pose_msg_ : view2_)
+  {
+    geometry_msgs::PoseStamped::ConstPtr pose_msg_ptr_ = pose_msg_.instantiate<geometry_msgs::PoseStamped>();
+    if (pose_msg_ptr_ != nullptr)
+    {
+      load_pose_vec_.push_back(*pose_msg_ptr_);
+    }
+  }
+  if (load_pcd_vec_.size() != load_pose_vec_.size()) ROS_ERROR("WRONG BAG FILE!!!!!");
+  for (int i = 0; i < load_pose_vec_.size(); ++i)
+  {
+    m_saved_map.push_back(pose_pcd_reduced(load_pose_vec_[i], load_pcd_vec_[i], i));
+    m_saved_map_pcd += tf_pcd(m_saved_map[i].pcd, m_saved_map[i].pose_eig);
+  }
+  voxelize_pcd(m_voxelgrid_vis, m_saved_map_pcd);
+  bag_.close();
+  return;
+}

@@ -64,9 +64,8 @@
 + odom_pcd_cb
     + pub realtime pose in corrected frame
     + keyframe detection -> if keyframe, add to pose graph + save to keyframe queue
-    + pose graph optimization with iSAM2
 + matching_timer_func
     + process a saved keyframe
-        + detect loop -> if loop, add to pose graph
+        + detect map match -> if matched, correct TF
 + vis_timer_func
-    + visualize all **(Note: global map is only visualized once uncheck/check the mapped_pcd in rviz to save comp.)**
+    + visualize all

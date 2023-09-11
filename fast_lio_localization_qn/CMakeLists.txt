@@ -18,7 +18,6 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Wall -Wextra ${CMAKE_CXX_FLAGS}")
 ### get packages
 find_package(catkin REQUIRED COMPONENTS
   roscpp
-  roslib
   rosbag
   std_msgs
   geometry_msgs

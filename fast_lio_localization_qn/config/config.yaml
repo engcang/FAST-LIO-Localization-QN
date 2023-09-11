@@ -1,22 +1,21 @@
 basic:
   map_frame: "map"                            # publish frame
-  loop_update_hz: 2.0                         # Loop detection Hz
+  map_match_hz: 2.0                           # Map match Hz
   vis_hz: 1.0                                 # visualize Hz
-  vis_pcd_voxel_resolution: 0.2
+  vis_pcd_voxel_resolution: 0.2               # voxel resolution of saved map
+  saved_map: "/home/mason/kitti.bag"          # directory should be in absolute path
 
 keyframe:
   keyframe_threshold: 1.5                     # unit [meter] every this distance, generate keyframe
   subkeyframes_number: 5                      # how many subkeyframes are merged to ICP with current keyframe (closest-this ~ closest+this, if exists)
 
-loop:
-  loop_detection_radius: 35.0                 # unit [meter] within this radius, check if loop or not
-  loop_detection_timediff_threshold: 30.0     # unit [sec] check if two keyframes are loop if times are farther than this
-
-quatro_nano_gicp_voxel_resolution: 0.3        # voxel resolution to use Quatro and Nano-GICP matching
+match:
+  match_detection_radius: 35.0                # unit [meter] within this radius, check if matched or not
+  quatro_nano_gicp_voxel_resolution: 0.3      # voxel resolution to use Quatro and Nano-GICP matching
 
 nano_gicp:                                    # all values are from Nano-GICP official github (Direct LiDAR Odometry)
   thread_number: 0                            # if 0, max number of core
-  icp_score_threshold: 1.0                    # lower is more accurate, for loop detection
+  icp_score_threshold: 1.0                    # lower is more accurate, for map-scan matching
   correspondences_number: 15
   max_iter: 32
   transformation_epsilon: 0.01
@@ -36,7 +35,3 @@ quatro:                                       # all values are from Quatro offic
     gnc_factor: 1.4                           # Control the magnitue of the increase in non-linearity. The larger the value, the steeper the increase in nonlinearity.
     rot_cost_diff_threshold: 0.0001           # The cost threshold is compared with the difference between costs of consecutive iterations.
                                               # Once the diff. of cost < `rot_cost_diff_threshold`, then the optimization is finished.
-
-result:
-  save_map_pcd: true                          # Save result map in .pcd format, not voxelized and hence file size could be huge
-  save_map_bag: true                          # Save result map in .bag format, NOTE: this is used for FAST-LIO-Localization-QN (https://github.com/engcang/FAST-LIO-Localization-QN)
