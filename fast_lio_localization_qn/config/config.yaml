@@ -3,7 +3,7 @@ basic:
   map_match_hz: 2.0                           # Map match Hz
   vis_hz: 1.0                                 # visualize Hz
   vis_pcd_voxel_resolution: 0.2               # voxel resolution of saved map
-  saved_map: "/home/mason/kitti.bag"          # directory should be in absolute path
+  saved_map: "/home/mason/kitti05.bag"          # directory should be in absolute path
 
 keyframe:
   keyframe_threshold: 1.5                     # unit [meter] every this distance, generate keyframe
@@ -25,7 +25,7 @@ nano_gicp:                                    # all values are from Nano-GICP of
     outlier_rejection_threshold: 1.0
 
 quatro:                                       # all values are from Quatro official github
-  enable: true                                # whether or not to use quatro, if false -> FAST-LIO-SAM-N (Nano-GICP only)
+  enable: false                               # whether or not to use quatro, if false -> FAST-LIO-Localization-N (Nano-GICP only)
   fpfh_normal_radius: 0.5                     # should satisfy the following condition: fpfh_radius >= 1.5 * fpfh_normal_radius
   fpfh_radius: 0.75                           # should satisfy the following condition: fpfh_radius >= 1.5 * fpfh_normal_radius
   estimating_scale: false 

@@ -1,7 +1,7 @@
 #include "main.h"
 
 
-pose_pcd::pose_pcd(const nav_msgs::Odometry &odom_in, const sensor_msgs::PointCloud2 &pcd_in, const int &idx_in)
+pose_pcd::pose_pcd(const nav_msgs::Odometry& odom_in, const sensor_msgs::PointCloud2& pcd_in, const int& idx_in)
 {
   tf::Quaternion q_(odom_in.pose.pose.orientation.x, odom_in.pose.pose.orientation.y, odom_in.pose.pose.orientation.z, odom_in.pose.pose.orientation.w);
   tf::Matrix3x3 m_(q_);
@@ -18,7 +18,7 @@ pose_pcd::pose_pcd(const nav_msgs::Odometry &odom_in, const sensor_msgs::PointCl
   timestamp = odom_in.header.stamp.toSec();
   idx = idx_in;
 }
-pose_pcd_reduced::pose_pcd_reduced(const geometry_msgs::PoseStamped &pose_in, const sensor_msgs::PointCloud2 &pcd_in, const int &idx_in)
+pose_pcd_reduced::pose_pcd_reduced(const geometry_msgs::PoseStamped& pose_in, const sensor_msgs::PointCloud2& pcd_in, const int& idx_in)
 {
   tf::Quaternion q_(pose_in.pose.orientation.x, pose_in.pose.orientation.y, pose_in.pose.orientation.z, pose_in.pose.orientation.w);
   tf::Matrix3x3 m_(q_);
@@ -81,7 +81,7 @@ FAST_LIO_LOCALIZATION_QN_CLASS::FAST_LIO_LOCALIZATION_QN_CLASS(const ros::NodeHa
   m_voxelgrid.setLeafSize(quatro_gicp_vox_res_, quatro_gicp_vox_res_, quatro_gicp_vox_res_);
   m_voxelgrid_vis.setLeafSize(vis_pcd_vox_res_, vis_pcd_vox_res_, vis_pcd_vox_res_);
   // nano_gicp init
-  m_nano_gicp.setMaxCorrespondenceDistance(m_loop_det_radi*2.0);
+  m_nano_gicp.setMaxCorrespondenceDistance(m_match_det_radi*2.0);
   m_nano_gicp.setNumThreads(nano_thread_number_);
   m_nano_gicp.setCorrespondenceRandomness(nano_correspondences_number_);
   m_nano_gicp.setMaximumIterations(nano_max_iter_);
@@ -116,7 +116,7 @@ FAST_LIO_LOCALIZATION_QN_CLASS::FAST_LIO_LOCALIZATION_QN_CLASS(const ros::NodeHa
   m_sub_odom_pcd_sync = std::make_shared<message_filters::Synchronizer<odom_pcd_sync_pol>>(odom_pcd_sync_pol(10), *m_sub_odom, *m_sub_pcd);
   m_sub_odom_pcd_sync->registerCallback(boost::bind(&FAST_LIO_LOCALIZATION_QN_CLASS::odom_pcd_cb, this, _1, _2));
   // Timers at the end
-  m_match_timer = m_nh.createTimer(ros::Duration(1/map_match_hz_), &FAST_LIO_LOCALIZATION_QN_CLASS::match_timer_func, this);
+  m_match_timer = m_nh.createTimer(ros::Duration(1/map_match_hz_), &FAST_LIO_LOCALIZATION_QN_CLASS::matching_timer_func, this);
   m_vis_timer = m_nh.createTimer(ros::Duration(1/vis_hz_), &FAST_LIO_LOCALIZATION_QN_CLASS::vis_timer_func, this);
   
   ROS_WARN("Main class, starting node...");

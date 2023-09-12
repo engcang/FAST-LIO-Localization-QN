@@ -23,7 +23,7 @@
 using namespace std;
 //////////////////////////////////////////////////////////////////////
 ///// conversions
-geometry_msgs::PoseStamped pose_eig_to_pose_stamped(const Eigen::Matrix4d &pose_eig_in, string frame_id="map")
+geometry_msgs::PoseStamped pose_eig_to_pose_stamped(const Eigen::Matrix4d& pose_eig_in, string frame_id="map")
 {
 	double r_, p_, y_;
 	tf::Matrix3x3 mat_;
@@ -51,7 +51,7 @@ sensor_msgs::PointCloud2 pcl_to_pcl_ros(pcl::PointCloud<T> cloud, string frame_i
 }
 ///// transformation
 template <typename T>
-pcl::PointCloud<T> tf_pcd(const pcl::PointCloud<T> &cloud_in, const Eigen::Matrix4d &pose_tf)
+pcl::PointCloud<T> tf_pcd(const pcl::PointCloud<T>& cloud_in, const Eigen::Matrix4d &pose_tf)
 {
 	if (cloud_in.size() == 0) return cloud_in;
 	pcl::PointCloud<T> pcl_out_ = cloud_in;

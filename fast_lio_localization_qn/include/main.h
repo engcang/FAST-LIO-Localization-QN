@@ -60,7 +60,7 @@ struct pose_pcd
   int idx;
   bool processed = false;
   pose_pcd(){};
-  pose_pcd(const nav_msgs::Odometry &odom_in, const sensor_msgs::PointCloud2 &pcd_in, const int &idx_in);
+  pose_pcd(const nav_msgs::Odometry& odom_in, const sensor_msgs::PointCloud2& pcd_in, const int& idx_in);
 };
 struct pose_pcd_reduced
 {
@@ -69,7 +69,7 @@ struct pose_pcd_reduced
   double timestamp;
   int idx;
   pose_pcd_reduced(){};
-  pose_pcd_reduced(const geometry_msgs::PoseStamped &pose_in, const sensor_msgs::PointCloud2 &pcd_in, const int &idx_in);
+  pose_pcd_reduced(const geometry_msgs::PoseStamped& pose_in, const sensor_msgs::PointCloud2& pcd_in, const int& idx_in);
 };
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 class FAST_LIO_LOCALIZATION_QN_CLASS
@@ -120,20 +120,20 @@ class FAST_LIO_LOCALIZATION_QN_CLASS
     ///// functions
   public:
     FAST_LIO_LOCALIZATION_QN_CLASS(const ros::NodeHandle& n_private);
-    ~FAST_LIO_LOCALIZATION_QN_CLASS();
+    ~FAST_LIO_LOCALIZATION_QN_CLASS(){};
   private:
     //methods
-    void update_vis_vars(const pose_pcd &pose_pcd_in);
-    void voxelize_pcd(pcl::VoxelGrid<PointType> &voxelgrid, pcl::PointCloud<PointType> &pcd_in);
-    bool check_if_keyframe(const pose_pcd &pose_pcd_in, const pose_pcd &latest_pose_pcd);
-    int get_closest_keyframe_idx(const pose_pcd &front_keyframe, const vector<pose_pcd> &keyframes);
-    Eigen::Matrix4d icp_key_to_subkeys(const pose_pcd &front_keyframe, const int &closest_idx, const vector<pose_pcd> &keyframes, bool &if_converged, double &score);
-    Eigen::Matrix4d coarse_to_fine_key_to_subkeys(const pose_pcd &front_keyframe, const int &closest_idx, const vector<pose_pcd> &keyframes, bool &if_converged, double &score);
-    visualization_msgs::Marker get_match_markers(const gtsam::Values &corrected_esti_in);
+    void update_vis_vars(const pose_pcd& pose_pcd_in);
+    void voxelize_pcd(pcl::VoxelGrid<PointType>& voxelgrid, pcl::PointCloud<PointType>& pcd_in);
+    bool check_if_keyframe(const pose_pcd& pose_pcd_in, const pose_pcd& latest_pose_pcd);
+    int get_closest_keyframe_idx(const pose_pcd& current_keyframe, const vector<pose_pcd_reduced>& saved_map);
+    Eigen::Matrix4d icp_key_to_subkeys(const pose_pcd& current_keyframe, const int& closest_idx, const vector<pose_pcd_reduced>& keyframes, bool& if_converged, double& score);
+    Eigen::Matrix4d coarse_to_fine_key_to_key(const pose_pcd& current_keyframe, const int& closest_idx, const vector<pose_pcd_reduced>& keyframes, bool& if_converged, double& score);
+    visualization_msgs::Marker get_match_markers();
     void load_map(const string& saved_map_path);
     //cb
-    void odom_pcd_cb(const nav_msgs::OdometryConstPtr &odom_msg, const sensor_msgs::PointCloud2ConstPtr &pcd_msg);
-    void match_timer_func(const ros::TimerEvent& event);
+    void odom_pcd_cb(const nav_msgs::OdometryConstPtr& odom_msg, const sensor_msgs::PointCloud2ConstPtr& pcd_msg);
+    void matching_timer_func(const ros::TimerEvent& event);
     void vis_timer_func(const ros::TimerEvent& event);
 };
 
