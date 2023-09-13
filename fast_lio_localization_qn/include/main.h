@@ -20,6 +20,7 @@
 #include <tf/LinearMath/Matrix3x3.h> // to Quaternion_to_euler
 #include <tf/transform_datatypes.h> // createQuaternionFromRPY
 #include <tf_conversions/tf_eigen.h> // tf <-> eigen
+#include <tf/transform_broadcaster.h> // broadcaster
 #include <sensor_msgs/PointCloud2.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <nav_msgs/Odometry.h>
@@ -88,19 +89,19 @@ class FAST_LIO_LOCALIZATION_QN_CLASS
     pose_pcd m_not_processed_keyframe;
     Eigen::Matrix4d m_last_corrected_pose = Eigen::Matrix4d::Identity();
     Eigen::Matrix4d m_odom_delta = Eigen::Matrix4d::Identity();
-    ///// graph and values
-    double m_keyframe_thr;
     ///// map match
     pcl::VoxelGrid<PointType> m_voxelgrid, m_voxelgrid_vis;
     nano_gicp::NanoGICP<PointType, PointType> m_nano_gicp;
     shared_ptr<quatro<PointType>> m_quatro_handler = nullptr;
     bool m_enable_quatro = false;
+    double m_keyframe_thr;
     double m_icp_score_thr;
     double m_match_det_radi;
     int m_sub_key_num;
     vector<pair<int, int>> m_match_idx_pairs; //for vis
     bool m_match_flag_vis = false; //for vis
     ///// visualize
+    tf::TransformBroadcaster m_broadcaster;
     pcl::PointCloud<pcl::PointXYZ> m_odoms, m_corrected_odoms;
     nav_msgs::Path m_odom_path, m_corrected_path;
     pcl::PointCloud<PointType> m_saved_map_pcd;
