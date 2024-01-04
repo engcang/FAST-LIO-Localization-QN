@@ -7,8 +7,9 @@ Panels:
         - /Global Options1
         - /mapping1
         - /mapping1/stacked1/Autocompute Value Bounds1
+        - /Odometry1/Shape1
       Splitter Ratio: 0.6432291865348816
-    Tree Height: 441
+    Tree Height: 865
   - Class: rviz/Selection
     Name: Selection
   - Class: rviz/Tool Properties
@@ -93,9 +94,9 @@ Visualization Manager:
         - Alpha: 0.5
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 15
-            Min Value: -5
-            Value: false
+            Max Value: 5.183594226837158
+            Min Value: -6.1296305656433105
+            Value: true
           Axis: Z
           Channel Name: intensity
           Class: rviz/PointCloud2
@@ -143,8 +144,8 @@ Visualization Manager:
       Position Tolerance: 0.0010000000474974513
       Shape:
         Alpha: 1
-        Axes Length: 1
-        Axes Radius: 0.20000000298023224
+        Axes Length: 2.5
+        Axes Radius: 0.4000000059604645
         Color: 255; 85; 0
         Head Length: 0
         Head Radius: 0
@@ -205,25 +206,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 689.7081298828125
+      Distance: 67.2518081665039
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 110.36275482177734
-        Y: -2.8537936210632324
-        Z: 0.7816738486289978
+        X: 0
+        Y: 0
+        Z: 0
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.5697963237762451
-      Target Frame: <Fixed Frame>
+      Pitch: 0.685398519039154
+      Target Frame: body
       Value: Orbit (rviz)
-      Yaw: 1.6053975820541382
+      Yaw: 0.6303977966308594
     Saved: ~
 Window Geometry:
   Displays:

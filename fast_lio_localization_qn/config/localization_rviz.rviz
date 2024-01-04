@@ -316,7 +316,7 @@ Visualization Manager:
           Color: 69; 159; 255
           Color Transformer: FlatColor
           Decay Time: 0
-          Enabled: true
+          Enabled: false
           Invert Rainbow: false
           Max Color: 255; 255; 255
           Min Color: 0; 0; 0
@@ -331,7 +331,7 @@ Visualization Manager:
           Unreliable: false
           Use Fixed Frame: true
           Use rainbow: true
-          Value: true
+          Value: false
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
@@ -395,7 +395,7 @@ Visualization Manager:
     Background Color: 0; 0; 0
     Default Light: true
     Fixed Frame: map
-    Frame Rate: 10
+    Frame Rate: 15
   Name: root
   Tools:
     - Class: rviz/Interact
@@ -418,25 +418,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 693.966552734375
+      Distance: 95.3555679321289
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 128.9181671142578
-        Y: 19.9722900390625
-        Z: -0.015500878915190697
+        X: 0
+        Y: 0
+        Z: 0
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.5697963237762451
-      Target Frame: <Fixed Frame>
+      Pitch: 0.6203985214233398
+      Target Frame: robot
       Value: Orbit (rviz)
-      Yaw: 1.6053977012634277
+      Yaw: 0.6553987264633179
     Saved: ~
 Window Geometry:
   Displays:

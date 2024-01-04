@@ -20,10 +20,10 @@
 ///// Eigen
 #include <Eigen/Eigen> // whole Eigen library: Sparse(Linearalgebra) + Dense(Core+Geometry+LU+Cholesky+SVD+QR+Eigenvalues)
 
-using namespace std;
+
 //////////////////////////////////////////////////////////////////////
 ///// conversions
-geometry_msgs::PoseStamped pose_eig_to_pose_stamped(const Eigen::Matrix4d& pose_eig_in, string frame_id="map")
+geometry_msgs::PoseStamped poseEigToPoseStamped(const Eigen::Matrix4d& pose_eig_in, std::string frame_id="map")
 {
 	double r_, p_, y_;
 	tf::Matrix3x3 mat_;
@@ -42,16 +42,16 @@ geometry_msgs::PoseStamped pose_eig_to_pose_stamped(const Eigen::Matrix4d& pose_
 	return pose_;
 }
 template <typename T>
-sensor_msgs::PointCloud2 pcl_to_pcl_ros(pcl::PointCloud<T> cloud, string frame_id="map")
+sensor_msgs::PointCloud2 pclToPclRos(pcl::PointCloud<T> cloud, std::string frame_id="map")
 {
-	sensor_msgs::PointCloud2 cloud_ROS;
-	pcl::toROSMsg(cloud, cloud_ROS);
-	cloud_ROS.header.frame_id = frame_id;
-	return cloud_ROS;
+	sensor_msgs::PointCloud2 cloud_ROS_;
+	pcl::toROSMsg(cloud, cloud_ROS_);
+	cloud_ROS_.header.frame_id = frame_id;
+	return cloud_ROS_;
 }
 ///// transformation
 template <typename T>
-pcl::PointCloud<T> tf_pcd(const pcl::PointCloud<T>& cloud_in, const Eigen::Matrix4d &pose_tf)
+pcl::PointCloud<T> transformPcd(const pcl::PointCloud<T>& cloud_in, const Eigen::Matrix4d &pose_tf)
 {
 	if (cloud_in.size() == 0) return cloud_in;
 	pcl::PointCloud<T> pcl_out_ = cloud_in;

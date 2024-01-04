@@ -1,8 +1,3 @@
-# Note: this repository is not completed yet
-
-<br>
-
-
 # FAST-LIO-Localization-QN
 + This repository is a map-based localization implementation combining [FAST-LIO2](https://github.com/hku-mars/FAST_LIO) as an odometry with [Quatro](https://quatro-plusplus.github.io/) and [Nano-GICP module](https://github.com/engcang/nano_gicp) as a map matching method
     + [Quatro](https://quatro-plusplus.github.io/) - fast, accurate and robust global registration which provides great initial guess of transform
@@ -27,19 +22,16 @@
     sudo make install -j16
     sudo ldconfig
     ```
++ `tbb` (is used for faster `Quatro`)
+    ```shell
+    sudo apt install libtbb-dev
+    ```
 
 ## How to build and use
-+ Get the code, build `tbb` first, and then build the main code. `tbb` is used for faster `Quatro`
++ Get the code and then build the main code.
     ```shell
     cd ~/your_workspace/src
     git clone https://github.com/engcang/FAST-LIO-Localization-QN --recursive
-
-    # Note the directory
-    cd FAST-LIO-Localization-QN/third_party/oneTBB && mkdir build installed
-    cd build
-    # Note the directory
-    cmake .. -DCMAKE_INSTALL_PREFIX=../installed -DTBB_TEST=OFF -DCMAKE_BUILD_TYPE=Release
-    make -j16 && make install
 
     cd ~/your_workspace
     # nano_gicp, quatro first
@@ -70,3 +62,9 @@
         + detect map match -> if matched, correct TF
 + vis_timer_func
     + visualize all
+
+<br>
+
+## Memo
++ `Quatro` module fixed for empty matches
++ `Quatro` module is updated with `optimizedMatching` which limits the number of correspondences and increased the speed

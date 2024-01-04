@@ -45,52 +45,45 @@
 #include <Eigen/Eigen> // whole Eigen library: Sparse(Linearalgebra) + Dense(Core+Geometry+LU+Cholesky+SVD+QR+Eigenvalues)
 
 
-using namespace std;
 using namespace std::chrono;
 using PointType = pcl::PointXYZI;
 typedef message_filters::sync_policies::ApproximateTime<nav_msgs::Odometry, sensor_msgs::PointCloud2> odom_pcd_sync_pol;
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-struct pose_pcd
+struct PosePcd
 {
   pcl::PointCloud<PointType> pcd;
   Eigen::Matrix4d pose_eig = Eigen::Matrix4d::Identity();
   Eigen::Matrix4d pose_corrected_eig = Eigen::Matrix4d::Identity();
-  double timestamp;
   int idx;
   bool processed = false;
-  pose_pcd(){};
-  pose_pcd(const nav_msgs::Odometry& odom_in, const sensor_msgs::PointCloud2& pcd_in, const int& idx_in);
+  PosePcd(){};
+  PosePcd(const nav_msgs::Odometry& odom_in, const sensor_msgs::PointCloud2& pcd_in, const int& idx_in);
 };
-struct pose_pcd_reduced
+struct PosePcdReduced
 {
   pcl::PointCloud<PointType> pcd;
   Eigen::Matrix4d pose_eig = Eigen::Matrix4d::Identity();
-  double timestamp;
   int idx;
-  pose_pcd_reduced(){};
-  pose_pcd_reduced(const geometry_msgs::PoseStamped& pose_in, const sensor_msgs::PointCloud2& pcd_in, const int& idx_in);
+  PosePcdReduced(){};
+  PosePcdReduced(const geometry_msgs::PoseStamped& pose_in, const sensor_msgs::PointCloud2& pcd_in, const int& idx_in);
 };
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-class FAST_LIO_LOCALIZATION_QN_CLASS
+class FastLioLocalizationQnClass
 {
   private:
     ///// basic params
-    string m_map_frame;
+    std::string m_map_frame;
     ///// shared data - odom and pcd
-    mutex m_realtime_pose_mutex, m_keyframes_mutex;
-    mutex m_vis_mutex;
+    mutex m_keyframes_mutex, m_vis_mutex;
     bool m_init=false;
     int m_current_keyframe_idx = 0;
-    pose_pcd m_current_frame;
-    vector<pose_pcd> m_keyframes;
-    vector<pose_pcd_reduced> m_saved_map;
-    pose_pcd m_not_processed_keyframe;
-    Eigen::Matrix4d m_last_corrected_pose = Eigen::Matrix4d::Identity();
-    Eigen::Matrix4d m_odom_delta = Eigen::Matrix4d::Identity();
+    PosePcd m_current_frame, m_last_keyframe, m_not_processed_keyframe;
+    std::vector<PosePcdReduced> m_saved_map;
+    Eigen::Matrix4d m_last_TF = Eigen::Matrix4d::Identity();
     ///// map match
-    pcl::VoxelGrid<PointType> m_voxelgrid, m_voxelgrid_vis;
+    pcl::VoxelGrid<PointType> m_voxelgrid;
     nano_gicp::NanoGICP<PointType, PointType> m_nano_gicp;
     shared_ptr<quatro<PointType>> m_quatro_handler = nullptr;
     bool m_enable_quatro = false;
@@ -98,8 +91,7 @@ class FAST_LIO_LOCALIZATION_QN_CLASS
     double m_icp_score_thr;
     double m_match_det_radi;
     int m_sub_key_num;
-    vector<pair<int, int>> m_match_idx_pairs; //for vis
-    bool m_match_flag_vis = false; //for vis
+    std::vector<std::pair<pcl::PointXYZ, pcl::PointXYZ>> m_match_xyz_pairs; //for vis
     ///// visualize
     tf::TransformBroadcaster m_broadcaster;
     pcl::PointCloud<pcl::PointXYZ> m_odoms, m_corrected_odoms;
@@ -112,7 +104,7 @@ class FAST_LIO_LOCALIZATION_QN_CLASS
     ros::Publisher m_corrected_current_pcd_pub, m_realtime_pose_pub, m_map_match_pub;
     ros::Publisher m_saved_map_pub;
     ros::Publisher m_debug_src_pub, m_debug_dst_pub, m_debug_coarse_aligned_pub, m_debug_fine_aligned_pub;
-    ros::Timer m_match_timer, m_vis_timer;
+    ros::Timer m_match_timer;
     // odom, pcd sync subscriber
     shared_ptr<message_filters::Synchronizer<odom_pcd_sync_pol>> m_sub_odom_pcd_sync = nullptr;
     shared_ptr<message_filters::Subscriber<nav_msgs::Odometry>> m_sub_odom = nullptr;
@@ -120,22 +112,21 @@ class FAST_LIO_LOCALIZATION_QN_CLASS
 
     ///// functions
   public:
-    FAST_LIO_LOCALIZATION_QN_CLASS(const ros::NodeHandle& n_private);
-    ~FAST_LIO_LOCALIZATION_QN_CLASS(){};
+    FastLioLocalizationQnClass(const ros::NodeHandle& n_private);
+    ~FastLioLocalizationQnClass(){};
   private:
     //methods
-    void update_vis_vars(const pose_pcd& pose_pcd_in);
-    void voxelize_pcd(pcl::VoxelGrid<PointType>& voxelgrid, pcl::PointCloud<PointType>& pcd_in);
-    bool check_if_keyframe(const pose_pcd& pose_pcd_in, const pose_pcd& latest_pose_pcd);
-    int get_closest_keyframe_idx(const pose_pcd& current_keyframe, const vector<pose_pcd_reduced>& saved_map);
-    Eigen::Matrix4d icp_key_to_subkeys(const pose_pcd& current_keyframe, const int& closest_idx, const vector<pose_pcd_reduced>& keyframes, bool& if_converged, double& score);
-    Eigen::Matrix4d coarse_to_fine_key_to_key(const pose_pcd& current_keyframe, const int& closest_idx, const vector<pose_pcd_reduced>& keyframes, bool& if_converged, double& score);
-    visualization_msgs::Marker get_match_markers();
-    void load_map(const string& saved_map_path);
+    void updateVisVars(const PosePcd& pose_pcd_in);
+    void voxelizePcd(pcl::VoxelGrid<PointType>& voxelgrid, pcl::PointCloud<PointType>& pcd_in);
+    bool checkIfKeyframe(const PosePcd& pose_pcd_in, const PosePcd& latest_pose_pcd);
+    int getClosestKeyframeIdx(const PosePcd& current_keyframe, const std::vector<PosePcdReduced>& saved_map);
+    Eigen::Matrix4d icpKeyToSubkeys(const PosePcd& current_keyframe, const int& closest_idx, const std::vector<PosePcdReduced>& keyframes, bool& if_converged, double& score);
+    Eigen::Matrix4d coarseToFineKeyToKey(const PosePcd& current_keyframe, const int& closest_idx, const std::vector<PosePcdReduced>& keyframes, bool& if_converged, double& score);
+    visualization_msgs::Marker getMatchMarker(const std::vector<std::pair<pcl::PointXYZ, pcl::PointXYZ>>& match_xyz_pairs);
+    void loadMap(const std::string& saved_map_path);
     //cb
-    void odom_pcd_cb(const nav_msgs::OdometryConstPtr& odom_msg, const sensor_msgs::PointCloud2ConstPtr& pcd_msg);
-    void matching_timer_func(const ros::TimerEvent& event);
-    void vis_timer_func(const ros::TimerEvent& event);
+    void odomPcdCallback(const nav_msgs::OdometryConstPtr& odom_msg, const sensor_msgs::PointCloud2ConstPtr& pcd_msg);
+    void matchingTimerFunc(const ros::TimerEvent& event);
 };
 
 
