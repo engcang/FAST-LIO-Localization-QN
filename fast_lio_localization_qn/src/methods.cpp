@@ -13,7 +13,7 @@ void FastLioLocalizationQnClass::updateVisVars(const PosePcd& pose_pcd_in)
 visualization_msgs::Marker FastLioLocalizationQnClass::getMatchMarker(const std::vector<std::pair<pcl::PointXYZ, pcl::PointXYZ>>& match_xyz_pairs)
 {
   visualization_msgs::Marker edges_; edges_.type = 5u;
-  edges_.scale.x = 0.07f; edges_.header.frame_id = m_map_frame; edges_.pose.orientation.w = 1.0f;
+  edges_.scale.x = 0.2f; edges_.header.frame_id = m_map_frame; edges_.pose.orientation.w = 1.0f;
   edges_.color.r = 1.0f; edges_.color.g = 1.0f; edges_.color.b = 1.0f; edges_.color.a = 1.0f;
   {
     for (int i = 0; i < match_xyz_pairs.size(); ++i)

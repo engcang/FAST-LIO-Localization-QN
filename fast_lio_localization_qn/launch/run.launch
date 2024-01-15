@@ -4,7 +4,7 @@
 	<arg name="lidar" default="ouster" /> <!-- ouster, velodyne, livox -->
 
 	<!-- visualize -->
-	<node if="$(arg rviz)" pkg="rviz" type="rviz" name="rviz_lio" args="-d $(find fast_lio_localization_qn)/config/lio_rviz.rviz" launch-prefix="nice"/>
+	<!--node if="$(arg rviz)" pkg="rviz" type="rviz" name="rviz_lio" args="-d $(find fast_lio_localization_qn)/config/lio_rviz.rviz" launch-prefix="nice"/-->
 	<node if="$(arg rviz)" pkg="rviz" type="rviz" name="rviz_sam" args="-d $(find fast_lio_localization_qn)/config/localization_rviz.rviz" launch-prefix="nice"/>
 	
 	<!-- run fast_lio_localization_qn -->
@@ -19,6 +19,12 @@
 		<arg name="rviz" value="false"/>
 	</include>
 	<include if="$(eval arg ('lidar') == 'livox')" file="$(find fast_lio)/launch/mapping_avia.launch">
+		<arg name="rviz" value="false"/>
+	</include>
+	<include if="$(eval arg ('lidar') == 'kitti')" file="$(find fast_lio)/launch/kitti.launch">
+		<arg name="rviz" value="false"/>
+	</include>
+	<include if="$(eval arg ('lidar') == 'mulran')" file="$(find fast_lio)/launch/mulran.launch">
 		<arg name="rviz" value="false"/>
 	</include>
 
