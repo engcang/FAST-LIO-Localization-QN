@@ -30,7 +30,7 @@
     sudo apt install libtbb-dev
     ```
 
-## How to build and use
+## How to build
 + Get the code and then build the main code.
     ```shell
     cd ~/your_workspace/src
@@ -44,26 +44,30 @@
     catkin build -DCMAKE_BUILD_TYPE=Release
     . devel/setup.bash
     ```
-+ Then run
+
+## How to run
++ Then run (change config files in third_party/`FAST_LIO`)
     ```shell
     roslaunch fast_lio_localization_qn run.launch lidar:=ouster
     roslaunch fast_lio_localization_qn run.launch lidar:=velodyne
     roslaunch fast_lio_localization_qn run.launch lidar:=livox
     ```
-+ Change config files in
-    + third_party/`FAST_LIO`/config
-    + fast_lio_localization_qn/config
+* In particular, we provide a preset launch option for specific datasets:
+    ```shell
+    roslaunch fast_lio_localization_qn run.launch lidar:=kitti
+    roslaunch fast_lio_localization_qn run.launch lidar:=mulran
+    roslaunch fast_lio_localization_qn run.launch lidar:=newer-college20
+    ```
 
 <br>
 
 ## Structure
-+ odom_pcd_cb
++ odomPcdCallback
     + pub realtime pose in corrected frame
     + keyframe detection -> if keyframe, add to pose graph + save to keyframe queue
-+ matching_timer_func
++ matchingTimerFunc
     + process a saved keyframe
         + detect map match -> if matched, correct TF
-+ vis_timer_func
     + visualize all
 
 <br>
@@ -71,3 +75,10 @@
 ## Memo
 + `Quatro` module fixed for empty matches
 + `Quatro` module is updated with `optimizedMatching` which limits the number of correspondences and increased the speed
+
+<br>
+
+## License
+<a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-sa/4.0/88x31.png" /></a>
+
+This work is licensed under a [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License](http://creativecommons.org/licenses/by-nc-sa/4.0/)
