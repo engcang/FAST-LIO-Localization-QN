@@ -52,7 +52,6 @@ struct QuatroConfig
 struct MapMatcherConfig
 {
     bool enable_quatro_ = true;
-    bool enable_submap_matching_ = true;
     int num_submap_keyframes_ = 10;
     double voxel_res_ = 0.1;
     double loop_detection_radius_;
@@ -85,13 +84,12 @@ public:
     ~MapMatcher();
     int fetchClosestKeyframeIdx(const PosePcd &front_keyframe,
                                 const std::vector<PosePcdReduced> &saved_map);
-    PcdPair setSrcAndDstCloud(const std::vector<PosePcdReduced> &saved_keyframes,
-                              const int src_idx,
+    PcdPair setSrcAndDstCloud(const PosePcd &query_keyframe,
+                              const std::vector<PosePcdReduced> &saved_keyframes,
                               const int dst_idx,
                               const int submap_range,
                               const double voxel_res,
-                              const bool enable_quatro,
-                              const bool enable_submap_matching);
+                              const bool enable_quatro);
     RegistrationOutput icpAlignment(const pcl::PointCloud<PointType> &src,
                                     const pcl::PointCloud<PointType> &dst);
     RegistrationOutput coarseToFineAlignment(const pcl::PointCloud<PointType> &src,

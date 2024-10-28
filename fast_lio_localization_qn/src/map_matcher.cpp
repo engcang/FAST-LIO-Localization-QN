@@ -53,27 +53,26 @@ int MapMatcher::fetchClosestKeyframeIdx(const PosePcd &front_keyframe,
     return closest_idx;
 }
 
-PcdPair MapMatcher::setSrcAndDstCloud(const std::vector<PosePcdReduced> &saved_keyframes,
-                                      const int src_idx,
+PcdPair MapMatcher::setSrcAndDstCloud(const PosePcd &query_keyframe,
+                                      const std::vector<PosePcdReduced> &saved_keyframes,
                                       const int dst_idx,
                                       const int submap_range,
                                       const double voxel_res,
-                                      const bool enable_quatro,
-                                      const bool enable_submap_matching)
+                                      const bool enable_quatro)
 {
-    pcl::PointCloud<PointType> dst_accum, src_accum;
-    int num_approx = saved_keyframes[src_idx].pcd_.size() * 2 * submap_range;
-    src_accum.reserve(num_approx);
+    pcl::PointCloud<PointType> dst_accum, src_out;
+    int num_approx = saved_keyframes[dst_idx].pcd_.size() * 2 * submap_range;
     dst_accum.reserve(num_approx);
-    if (enable_submap_matching)
+
+    src_out = transformPcd(query_keyframe.pcd_, query_keyframe.pose_corrected_eig_);
+    if (enable_quatro)
     {
-        for (int i = src_idx - submap_range; i < src_idx + submap_range + 1; ++i)
-        {
-            if (i >= 0 && i < static_cast<int>(saved_keyframes.size() - 1))
-            {
-                src_accum += transformPcd(saved_keyframes[i].pcd_, saved_keyframes[i].pose_eig_);
-            }
-        }
+        dst_accum = transformPcd(saved_keyframes[dst_idx].pcd_, saved_keyframes[dst_idx].pose_eig_);
+    }
+    else
+    {
+        // For ICP matching,
+        // empirically scan-to-submap matching works better
         for (int i = dst_idx - submap_range; i < dst_idx + submap_range + 1; ++i)
         {
             if (i >= 0 && i < static_cast<int>(saved_keyframes.size() - 1))
@@ -82,32 +81,11 @@ PcdPair MapMatcher::setSrcAndDstCloud(const std::vector<PosePcdReduced> &saved_k
             }
         }
     }
-    else
-    {
-        src_accum = transformPcd(saved_keyframes[src_idx].pcd_, saved_keyframes[src_idx].pose_eig_);
-        if (enable_quatro)
-        {
-            dst_accum = transformPcd(saved_keyframes[dst_idx].pcd_, saved_keyframes[dst_idx].pose_eig_);
-        }
-        else
-        {
-            // For ICP matching,
-            // empirically scan-to-submap matching works better
-            for (int i = dst_idx - submap_range; i < dst_idx + submap_range + 1; ++i)
-            {
-                if (i >= 0 && i < static_cast<int>(saved_keyframes.size() - 1))
-                {
-                    dst_accum += transformPcd(saved_keyframes[i].pcd_, saved_keyframes[i].pose_eig_);
-                }
-            }
-        }
-    }
-    return {*voxelizePcd(src_accum, voxel_res), *voxelizePcd(dst_accum, voxel_res)};
+    return {*voxelizePcd(src_out, voxel_res), *voxelizePcd(dst_accum, voxel_res)};
 }
 
-RegistrationOutput
-MapMatcher::icpAlignment(const pcl::PointCloud<PointType> &src,
-                         const pcl::PointCloud<PointType> &dst)
+RegistrationOutput MapMatcher::icpAlignment(const pcl::PointCloud<PointType> &src,
+                                            const pcl::PointCloud<PointType> &dst)
 {
     RegistrationOutput reg_output;
     aligned_.clear();
@@ -134,9 +112,8 @@ MapMatcher::icpAlignment(const pcl::PointCloud<PointType> &src,
     return reg_output;
 }
 
-RegistrationOutput
-MapMatcher::coarseToFineAlignment(const pcl::PointCloud<PointType> &src,
-                                  const pcl::PointCloud<PointType> &dst)
+RegistrationOutput MapMatcher::coarseToFineAlignment(const pcl::PointCloud<PointType> &src,
+                                                     const pcl::PointCloud<PointType> &dst)
 {
     RegistrationOutput reg_output;
     coarse_aligned_.clear();
@@ -168,13 +145,12 @@ RegistrationOutput MapMatcher::performMapMatcher(const PosePcd &query_keyframe,
     {
         // Quatro + NANO-GICP to check loop (from front_keyframe to closest
         // keyframe's neighbor)
-        const auto &[src_cloud, dst_cloud] = setSrcAndDstCloud(saved_keyframes,
-                                                               query_keyframe.idx_,
+        const auto &[src_cloud, dst_cloud] = setSrcAndDstCloud(query_keyframe,
+                                                               saved_keyframes,
                                                                closest_keyframe_idx_,
                                                                config_.num_submap_keyframes_,
                                                                config_.voxel_res_,
-                                                               config_.enable_quatro_,
-                                                               config_.enable_submap_matching_);
+                                                               config_.enable_quatro_);
         // Only for visualization
         *src_cloud_ = src_cloud;
         *dst_cloud_ = dst_cloud;
@@ -182,8 +158,7 @@ RegistrationOutput MapMatcher::performMapMatcher(const PosePcd &query_keyframe,
         if (config_.enable_quatro_)
         {
             std::cout << "\033[1;35mExecute coarse-to-fine alignment: "
-                      << src_cloud.size() << " vs " << dst_cloud.size()
-                      << "\033[0m\n";
+                      << src_cloud.size() << " vs " << dst_cloud.size() << "\033[0m\n";
             return coarseToFineAlignment(src_cloud, dst_cloud);
         }
         else

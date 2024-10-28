@@ -59,7 +59,7 @@ private:
     std::mutex keyframes_mutex_, vis_mutex_;
     bool is_initialized_ = false;
     int current_keyframe_idx_ = 0;
-    PosePcd current_frame_, last_keyframe_, not_processed_latest_keyframe_;
+    PosePcd last_keyframe_;
     std::vector<PosePcdReduced> saved_map_from_bag_;
     Eigen::Matrix4d last_corrected_TF_ = Eigen::Matrix4d::Identity();
     ///// map match

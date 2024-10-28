@@ -19,15 +19,14 @@ FastLioLocalizationQn::FastLioLocalizationQn(const ros::NodeHandle &n_private):
     /* keyframe */
     nh_.param<double>("/keyframe/keyframe_threshold", keyframe_dist_thr_, 1.0);
     nh_.param<int>("/keyframe/num_submap_keyframes", mm_config.num_submap_keyframes_, 5);
-    nh_.param<bool>("/keyframe/enable_submap_matching", mm_config.enable_submap_matching_, true);
     /* match */
     nh_.param<double>("/match/match_detection_radius", mm_config.loop_detection_radius_, 15.0);
     nh_.param<double>("/match/quatro_nano_gicp_voxel_resolution", mm_config.voxel_res_, 0.3);
-    gc.max_corr_dist_ = mm_config.loop_detection_radius_ * 1.5;
     /* nano */
     nh_.param<int>("/nano_gicp/thread_number", gc.nano_thread_number_, 0);
     nh_.param<double>("/nano_gicp/icp_score_threshold", gc.icp_score_thr_, 10.0);
     nh_.param<int>("/nano_gicp/correspondences_number", gc.nano_correspondences_number_, 15);
+    nh_.param<double>("/nano_gicp/max_correspondence_distance", gc.max_corr_dist_, 5.0);
     nh_.param<int>("/nano_gicp/max_iter", gc.nano_max_iter_, 32);
     nh_.param<double>("/nano_gicp/transformation_epsilon", gc.transformation_epsilon_, 0.01);
     nh_.param<double>("/nano_gicp/euclidean_fitness_epsilon", gc.euclidean_fitness_epsilon_, 0.01);
@@ -81,50 +80,48 @@ FastLioLocalizationQn::FastLioLocalizationQn(const ros::NodeHandle &n_private):
 
 void FastLioLocalizationQn::odomPcdCallback(const nav_msgs::OdometryConstPtr &odom_msg, const sensor_msgs::PointCloud2ConstPtr &pcd_msg)
 {
-    current_frame_ = PosePcd(*odom_msg, *pcd_msg, current_keyframe_idx_); // to be checked if keyframe or not
+    PosePcd current_frame = PosePcd(*odom_msg, *pcd_msg, current_keyframe_idx_); // to be checked if keyframe or not
     //// 1. realtime pose = last TF * odom
-    current_frame_.pose_corrected_eig_ = last_corrected_TF_ * current_frame_.pose_eig_;
-    geometry_msgs::PoseStamped current_pose_stamped_ = poseEigToPoseStamped(current_frame_.pose_corrected_eig_, map_frame_);
+    current_frame.pose_corrected_eig_ = last_corrected_TF_ * current_frame.pose_eig_;
+    geometry_msgs::PoseStamped current_pose_stamped_ = poseEigToPoseStamped(current_frame.pose_corrected_eig_, map_frame_);
     realtime_pose_pub_.publish(current_pose_stamped_);
-    broadcaster_.sendTransform(tf::StampedTransform(poseEigToROSTf(current_frame_.pose_corrected_eig_),
+    broadcaster_.sendTransform(tf::StampedTransform(poseEigToROSTf(current_frame.pose_corrected_eig_),
                                                     ros::Time::now(),
                                                     map_frame_,
                                                     "robot"));
     // pub current scan in corrected pose frame
-    corrected_current_pcd_pub_.publish(pclToPclRos(transformPcd(current_frame_.pcd_, current_frame_.pose_corrected_eig_), map_frame_));
+    corrected_current_pcd_pub_.publish(pclToPclRos(transformPcd(current_frame.pcd_, current_frame.pose_corrected_eig_), map_frame_));
 
     if (!is_initialized_) //// init only once
     {
         // 1. save first keyframe
         {
             std::lock_guard<std::mutex> lock(keyframes_mutex_);
-            last_keyframe_ = current_frame_;
-            not_processed_latest_keyframe_ = current_frame_; // to check match in another thread
+            last_keyframe_ = current_frame;
         }
         current_keyframe_idx_++;
         //// 2. vis
         {
             std::lock_guard<std::mutex> lock(vis_mutex_);
-            updateOdomsAndPaths(current_frame_);
+            updateOdomsAndPaths(current_frame);
         }
         is_initialized_ = true;
     }
     else
     {
         //// 1. check if keyframe
-        if (checkIfKeyframe(current_frame_, last_keyframe_))
+        if (checkIfKeyframe(current_frame, last_keyframe_))
         {
             // 2. if so, save
             {
                 std::lock_guard<std::mutex> lock(keyframes_mutex_);
-                last_keyframe_ = current_frame_;
-                not_processed_latest_keyframe_ = current_frame_; // to check match in another thread
+                last_keyframe_ = current_frame;
             }
             current_keyframe_idx_++;
             //// 3. vis
             {
                 std::lock_guard<std::mutex> lock(vis_mutex_);
-                updateOdomsAndPaths(current_frame_);
+                updateOdomsAndPaths(current_frame);
             }
         }
     }
@@ -140,26 +137,26 @@ void FastLioLocalizationQn::matchingTimerFunc(const ros::TimerEvent &event)
 
     //// 1. copy not processed keyframes
     high_resolution_clock::time_point t1_ = high_resolution_clock::now();
-    PosePcd not_proc_key_copy_;
+    PosePcd last_keyframe_copy;
     {
         std::lock_guard<std::mutex> lock(keyframes_mutex_);
-        not_proc_key_copy_ = not_processed_latest_keyframe_;
-        not_processed_latest_keyframe_.processed_ = true;
+        last_keyframe_copy = last_keyframe_;
+        last_keyframe_.processed_ = true;
     }
-    if (not_proc_key_copy_.idx_ == 0 || not_proc_key_copy_.processed_)
+    if (last_keyframe_copy.idx_ == 0 || last_keyframe_copy.processed_)
     {
         return; // already processed or initial keyframe
     }
 
     //// 2. detect match and calculate TF
-    // from not_proc_key_copy_ keyframe to map (saved keyframes) in threshold radius, get the closest keyframe
-    int closest_keyframe_idx = map_matcher_->fetchClosestKeyframeIdx(not_proc_key_copy_, saved_map_from_bag_);
+    // from last_keyframe_copy keyframe to map (saved keyframes) in threshold radius, get the closest keyframe
+    int closest_keyframe_idx = map_matcher_->fetchClosestKeyframeIdx(last_keyframe_copy, saved_map_from_bag_);
     if (closest_keyframe_idx < 0)
     {
         return; // if no matched candidate
     }
     // Quatro + NANO-GICP to check match (from current_keyframe to closest keyframe in saved map)
-    const RegistrationOutput &reg_output = map_matcher_->performMapMatcher(not_proc_key_copy_,
+    const RegistrationOutput &reg_output = map_matcher_->performMapMatcher(last_keyframe_copy,
                                                                            saved_map_from_bag_,
                                                                            closest_keyframe_idx);
 
@@ -168,24 +165,24 @@ void FastLioLocalizationQn::matchingTimerFunc(const ros::TimerEvent &event)
     {
         ROS_INFO("\033[1;32mMap matching accepted. Score: %.3f\033[0m", reg_output.score_);
         last_corrected_TF_ = reg_output.pose_between_eig_ * last_corrected_TF_; // update TF
-        Eigen::Matrix4d TFed_pose = reg_output.pose_between_eig_ * not_proc_key_copy_.pose_corrected_eig_;
+        Eigen::Matrix4d TFed_pose = reg_output.pose_between_eig_ * last_keyframe_copy.pose_corrected_eig_;
         // correct poses in vis data
         {
             std::lock_guard<std::mutex> lock(vis_mutex_);
-            corrected_odoms_.points[not_proc_key_copy_.idx_] = pcl::PointXYZ(TFed_pose(0, 3), TFed_pose(1, 3), TFed_pose(2, 3));
-            corrected_odom_path_.poses[not_proc_key_copy_.idx_] = poseEigToPoseStamped(TFed_pose, map_frame_);
+            corrected_odoms_.points[last_keyframe_copy.idx_] = pcl::PointXYZ(TFed_pose(0, 3), TFed_pose(1, 3), TFed_pose(2, 3));
+            corrected_odom_path_.poses[last_keyframe_copy.idx_] = poseEigToPoseStamped(TFed_pose, map_frame_);
         }
         // map matches
-        matched_pairs_xyz_.push_back({corrected_odoms_.points[not_proc_key_copy_.idx_], raw_odoms_.points[not_proc_key_copy_.idx_]}); // for vis
+        matched_pairs_xyz_.push_back({corrected_odoms_.points[last_keyframe_copy.idx_], raw_odoms_.points[last_keyframe_copy.idx_]}); // for vis
         map_match_pub_.publish(getMatchMarker(matched_pairs_xyz_));
     }
     high_resolution_clock::time_point t2_ = high_resolution_clock::now();
 
+    //// 4. vis
     debug_src_pub_.publish(pclToPclRos(map_matcher_->getSourceCloud(), map_frame_));
     debug_dst_pub_.publish(pclToPclRos(map_matcher_->getTargetCloud(), map_frame_));
     debug_coarse_aligned_pub_.publish(pclToPclRos(map_matcher_->getCoarseAlignedCloud(), map_frame_));
     debug_fine_aligned_pub_.publish(pclToPclRos(map_matcher_->getFinalAlignedCloud(), map_frame_));
-
     // publish odoms and paths
     {
         std::lock_guard<std::mutex> lock(vis_mutex_);

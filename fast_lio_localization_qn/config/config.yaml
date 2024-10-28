@@ -7,8 +7,6 @@ basic:
 keyframe:
   keyframe_threshold: 1.5                     # unit [meter] every this distance, generate keyframe
   num_submap_keyframes: 5                     # how many subkeyframes are merged to ICP with current keyframe (closest-this ~ closest+this, if exists)
-  enable_submap_matching: false               # If it is set to be `true`, submap-level (coarse-to-)fine alignment will be performed
-                                              # note: without Quatro, anyway scan-to-submap matching is performed, as that shows better performance
 
 match:
   match_detection_radius: 35.0                # unit [meter] within this radius, check if matched or not
@@ -18,6 +16,7 @@ nano_gicp:                                    # all values are from Nano-GICP of
   thread_number: 0                            # if 0, max number of core
   icp_score_threshold: 1.0                    # lower is more accurate, for map-scan matching
   correspondences_number: 15
+  max_correspondence_distance: 35.0           # this is also used for candidate trimming after ScanContext
   max_iter: 32
   transformation_epsilon: 0.01
   euclidean_fitness_epsilon: 0.01
